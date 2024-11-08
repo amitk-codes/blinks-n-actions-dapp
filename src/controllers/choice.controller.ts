@@ -1,5 +1,9 @@
-import { Action } from "@solana/actions";
+import { Action, ActionPostRequest, createPostResponse } from "@solana/actions";
 import { Request, Response } from "express";
+import { BN, Program } from "@coral-xyz/anchor";
+import { ISolanaChoice } from "../contracts/solana-choice/types";
+import SolanaChoiceIdl from "../contracts/solana-choice/idl.json";
+import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 
 export const fetchBlinks = async (_req: Request, res: Response) => {
   try {
@@ -13,12 +17,12 @@ export const fetchBlinks = async (_req: Request, res: Response) => {
         actions: [
           {
             label: "Coffee",
-            href: "/choose?option=coffee",
+            href: "/choice?option=coffee",
             type: "transaction",
           },
           {
             label: "Tea",
-            href: "/choose?option=tea",
+            href: "/choice?option=tea",
             type: "transaction",
           },
         ],
