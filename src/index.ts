@@ -8,6 +8,7 @@ import { actionCorsMiddleware } from "@solana/actions";
 
 const app = express();
 
+app.use(express.json());
 app.use(actionCorsMiddleware({}));
 
 app.use("/health", healthRoutes);
