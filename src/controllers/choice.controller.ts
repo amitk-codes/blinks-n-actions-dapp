@@ -27,6 +27,64 @@ export const fetchBlinks = async (_req: Request, res: Response) => {
 
     res.status(200).json(actionMetadata);
   } catch (err: any) {
+    res.status(500).send("SERVER ERROR");
+  }
+};
+
+export const blinkActions = async (req: Request, res: Response) => {
+  try {
+    const { option } = req.query;
+
+    if (option !== "tea" && option !== "coffee") {
+      res
+        .status(400)
+        .json({ message: "only 'coffee' or 'tea' is allowed as the option" });
+
+      return;
+    }
+
+    const connection = new Connection("http://127.0.0.1:8899", "confirmed");
+
+    const program: Program<ISolanaChoice> = new Program(
+      SolanaChoiceIdl as ISolanaChoice,
+      { connection }
+    );
+
+    const body: ActionPostRequest = req.body;
+    let voter;
+
+    try {
+      voter = new PublicKey(body.account);
+    } catch (_err) {
+      res.status(400).json({ message: "INVALID ACCOUNT" });
+      return;
+    }
+
+    const instruction = await program.methods
+      .vote(new BN(1), option)
+      .accounts({
+        signer: voter,
+      })
+      .instruction();
+
+    const { lastValidBlockHeight, blockhash } =
+      await connection.getLatestBlockhash();
+
+    const tx = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: voter,
+    }).add(instruction);
+
+    const response = await createPostResponse({
+      fields: {
+        type: "transaction",
+        transaction: tx,
+      },
+    });
+
+    res.status(200).json(response);
+  } catch (err: any) {
     res.status(500);
   }
 };
